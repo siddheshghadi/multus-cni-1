@@ -23,7 +23,7 @@ import (
 	"regexp"
 
 	"github.com/intel/multus-cni/logging"
-	"github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/apis/k8s.cni.cncf.io/v1"
+	nettypes "github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/apis/k8s.cni.cncf.io/v1"
 
 	"github.com/containernetworking/cni/libcni"
 	"k8s.io/api/admission/v1beta1"
@@ -32,7 +32,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 )
 
-func validateNetworkAttachmentDefinition(netAttachDef types.NetworkAttachmentDefinition) (bool, error) {
+func validateNetworkAttachmentDefinition(netAttachDef nettypes.NetworkAttachmentDefinition) (bool, error) {
 	nameRegex := `^[a-z0-9]([-a-z0-9]*[a-z0-9])?$`
 	isNameCorrect, err := regexp.MatchString(nameRegex, netAttachDef.GetName())
 	if !isNameCorrect {
@@ -101,9 +101,9 @@ func deserializeAdmissionReview(body []byte) (v1beta1.AdmissionReview, error) {
 	return ar, err
 }
 
-func deserializeNetworkAttachmentDefinition(ar v1beta1.AdmissionReview) (types.NetworkAttachmentDefinition, error) {
+func deserializeNetworkAttachmentDefinition(ar v1beta1.AdmissionReview) (nettypes.NetworkAttachmentDefinition, error) {
 	/* unmarshal NetworkAttachmentDefinition from AdmissionReview request */
-	netAttachDef := types.NetworkAttachmentDefinition{}
+	netAttachDef := nettypes.NetworkAttachmentDefinition{}
 	err := json.Unmarshal(ar.Request.Object.Raw, &netAttachDef)
 	return netAttachDef, err
 }
