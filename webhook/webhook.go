@@ -23,7 +23,7 @@ import (
 	"regexp"
 
 	"github.com/intel/multus-cni/logging"
-	"github.com/intel/multus-cni/types"
+	nettypes "github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/apis/k8s.cni.cncf.io/v1"
 
 	"github.com/containernetworking/cni/libcni"
 	"k8s.io/api/admission/v1beta1"
@@ -32,9 +32,9 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 )
 
-func validateNetworkAttachmentDefinition(netAttachDef types.NetworkAttachmentDefinition) (bool, error) {
+func validateNetworkAttachmentDefinition(netAttachDef nettypes.NetworkAttachmentDefinition) (bool, error) {
 	nameRegex := `^[a-z0-9]([-a-z0-9]*[a-z0-9])?$`
-	isNameCorrect, err := regexp.MatchString(nameRegex, netAttachDef.Metadata.Name)
+	isNameCorrect, err := regexp.MatchString(nameRegex, netAttachDef.GetName())
 	if !isNameCorrect {
 		logging.Errorf("Invalid name.")
 		return false, fmt.Errorf("Invalid name")
@@ -49,7 +49,7 @@ func validateNetworkAttachmentDefinition(netAttachDef types.NetworkAttachmentDef
 		return false, fmt.Errorf("Network Config is empty")
 	}
 
-	logging.Printf(logging.DebugLevel, "Validating network config spec: %s", netAttachDef.Spec.Config)
+	logging.Verbosef("Validating network config spec: %s", netAttachDef.Spec.Config)
 
 	/* try to unmarshal config into NetworkConfig or NetworkConfigList
 	   using actual code from libcni - if succesful, it means that the config
@@ -57,16 +57,16 @@ func validateNetworkAttachmentDefinition(netAttachDef types.NetworkAttachmentDef
 	confBytes := []byte(netAttachDef.Spec.Config)
 	_, err = libcni.ConfListFromBytes(confBytes)
 	if err != nil {
-		logging.Printf(logging.DebugLevel, "Spec is not a valid network config: %s. Trying to parse into config list", err)
+		logging.Verbosef("Spec is not a valid network config: %s. Trying to parse into config list", err)
 		_, err = libcni.ConfFromBytes(confBytes)
 		if err != nil {
-			logging.Printf(logging.DebugLevel, "Spec is not a valid network config list: %s", err)
+			logging.Verbosef("Spec is not a valid network config list: %s", err)
 			logging.Errorf("Invalid config: %s", err)
 			return false, fmt.Errorf("Invalid network config spec")
 		}
 	}
 
-	logging.Printf(logging.DebugLevel, "Network Attachment Defintion is valid. Admission Review request allowed")
+	logging.Verbosef("Network Attachment Defintion is valid. Admission Review request allowed")
 	return true, nil
 }
 
@@ -101,9 +101,9 @@ func deserializeAdmissionReview(body []byte) (v1beta1.AdmissionReview, error) {
 	return ar, err
 }
 
-func deserializeNetworkAttachmentDefinition(ar v1beta1.AdmissionReview) (types.NetworkAttachmentDefinition, error) {
+func deserializeNetworkAttachmentDefinition(ar v1beta1.AdmissionReview) (nettypes.NetworkAttachmentDefinition, error) {
 	/* unmarshal NetworkAttachmentDefinition from AdmissionReview request */
-	netAttachDef := types.NetworkAttachmentDefinition{}
+	netAttachDef := nettypes.NetworkAttachmentDefinition{}
 	err := json.Unmarshal(ar.Request.Object.Raw, &netAttachDef)
 	return netAttachDef, err
 }
@@ -119,7 +119,7 @@ func handleValidationError(w http.ResponseWriter, ar v1beta1.AdmissionReview, or
 }
 
 func writeResponse(w http.ResponseWriter, ar v1beta1.AdmissionReview) {
-	logging.Printf(logging.DebugLevel, "Sending response to the API server")
+	logging.Verbosef("Sending response to the API server")
 	resp, _ := json.Marshal(ar)
 	w.Write(resp)
 }
@@ -188,7 +188,7 @@ func main() {
 
 	/* enable logging */
 	logging.SetLogLevel("debug")
-	logging.Printf(logging.DebugLevel, "Starting Multus webhook server")
+	logging.Verbosef("Starting Multus webhook server")
 
 	/* register handlers */
 	http.HandleFunc("/validate", validateHandler)
