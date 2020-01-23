@@ -23,7 +23,7 @@ import (
 	"regexp"
 
 	"github.com/intel/multus-cni/logging"
-	"github.com/K8sNetworkPlumbingWG/network-attachment-definition-client/pkg/apis/k8s.cni.cncf.io/v1"
+	"github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/apis/k8s.cni.cncf.io/v1"
 
 	"github.com/containernetworking/cni/libcni"
 	"k8s.io/api/admission/v1beta1"
