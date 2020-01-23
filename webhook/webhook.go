@@ -82,9 +82,8 @@ func prepareAdmissionReviewResponse(allowed bool, message string, ar *v1beta1.Ad
 			}
 		}
 		return nil
-	} else {
-		return fmt.Errorf("AdmissionReview request empty")
 	}
+	return fmt.Errorf("AdmissionReview request empty")
 }
 
 func deserializeAdmissionReview(body []byte) (v1beta1.AdmissionReview, error) {
