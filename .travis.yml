@@ -14,9 +14,14 @@ env:
     - REGISTRY_USER=${REGISTRY_USER}
     - REGISTRY_PASS=${REGISTRY_PASS}
     - secure: "${REGISTRY_SECURE}"
-  jobs:
-    - TARGET=amd64
-    - TARGET=ppc64le
+
+jobs:
+  - arch: amd64
+    env: TARGET=amd64
+  - arch: amd64
+    env: TARGET=ppc64le
+  - arch: ppc64le
+    env: TARGET=ppc64le
 
 before_install:
   - sudo apt-get update -qq
@@ -35,9 +40,9 @@ before_script:
 
 script:
   - GOARCH="${TARGET}" ./build
+  - sudo env PATH=${PATH} ./test.sh
   - |
     if [ "${TARGET}" == "amd64" ]; then
-      sudo env PATH=${PATH} ./test.sh
       goveralls -coverprofile=coverage.out -service=travis-ci
       docker build -t nfvpe/multus:latest-amd64 .
       docker build -t nfvpe/multus:latest-ppc64le -f Dockerfile.ppc64le .
